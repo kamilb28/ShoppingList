@@ -1,0 +1,37 @@
+<div class="container">
+    <h2>Your Shopping Lists</h2>
+  
+    <!-- Formularz dodawania nowej listy -->
+    <form (submit)="addNewList(newListName.value, newDueDate.value, $event)">
+      <input #newListName type="text" placeholder="Enter List Name" required />
+      <input #newDueDate type="date" required />
+      <button type="submit">Add List</button>
+    </form>
+  
+    <!-- Wyświetlanie list zakupów -->
+    <div *ngFor="let list of shoppingLists" class="shopping-list">
+      <h3>{{ list.name }} (Due: {{ list.dueDate }})</h3>
+      <ul>
+        <!-- Wyświetlanie elementów w liście -->
+        <li *ngFor="let item of list.items">
+          <span [class.completed]="item.completed">
+            {{ item.name }} - {{ item.quantity }} {{ item.unit }}
+          </span>
+          <button (click)="toggleCompleted(list.id, item.name)">
+            {{ item.completed ? 'Undo' : 'Complete' }}
+          </button>
+        </li>
+      </ul>
+  
+      <!-- Formularz dodawania elementów do listy -->
+      <form class="add-item-form" (submit)="addItemToList(list.id, newItemName.value, +newItemQuantity.value, newItemUnit.value, $event)">
+        <input #newItemName type="text" placeholder="Item Name" required />
+        <input #newItemQuantity type="number" placeholder="Quantity" required />
+        <input #newItemUnit type="text" placeholder="Unit (e.g., kg, pack)" required />
+        <button type="submit">Add Item</button>
+      </form>      
+  
+      <button (click)="deleteList(list.id)">Delete List</button>
+    </div>
+  </div>
+  
