@@ -74,4 +74,9 @@ export class ListComponent implements OnInit {
       this.shoppingLists = this.shoppingLists.filter((list) => list.id !== listId);
     });
   }
+
+  logout(): void {
+    localStorage.removeItem('access_token');
+    this.router.navigate(['/auth/login']);
+  }
 }
