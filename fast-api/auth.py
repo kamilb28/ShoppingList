@@ -3,9 +3,20 @@ from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException
+import os
+import secrets
 
-# Hasło do klucza szyfrującego JWT
-SECRET_KEY = "your_secret_key"
+def load_or_generate_secret_key():
+    if os.path.exists("jwt.key"):
+        with open("jwt.key", "r") as file:
+            return file.read().strip()
+    else:
+        secret_key = secrets.token_urlsafe(32)
+        with open("jwt.key", "w") as file:
+            file.write(secret_key)
+        return secret_key
+
+SECRET_KEY = load_or_generate_secret_key()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 5
 
