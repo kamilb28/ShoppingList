@@ -1,22 +1,34 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ShoppingService } from '../services/shopping-list.service';
+import { Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './list.component.html',
   styleUrls: ['./list.component.css'],
 })
 export class ListComponent implements OnInit {
   shoppingLists: any[] = [];
 
-  constructor(private shoppingService: ShoppingService) {}
+  constructor(private shoppingService: ShoppingService, private router: Router) {}
 
   ngOnInit(): void {
-    this.shoppingService.getShoppingLists().subscribe((data) => {
-      this.shoppingLists = data;
+    this.shoppingService.getShoppingLists().subscribe({
+      next: (data) => {
+        this.shoppingLists = data;
+      },
+      error: (err) => {
+        if (err.status === 401) {
+          console.error('Unauthorized access, redirecting to login...');
+          this.router.navigate(['/auth/login']);
+        } else {
+          console.error('An error occurred:', err);
+        }
+      },
     });
   }
 
