@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import engine, Base, get_db
@@ -94,8 +94,8 @@ def delete_shopping_list(list_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Shopping list deleted successfully"}
 
-@app.post("/register/", response_model=userrepo.UserCreate)
-def register_user(_user: userrepo.UserCreate, db: Session = Depends(get_db)):
+@app.post("/register/")
+def register_user(_user: userrepo.UserCreate, response: Response, db: Session = Depends(get_db)):
     db_user = db.query(User).filter(User.username == _user.username).first()
     if db_user:
         raise HTTPException(status_code=409, detail="Username already registered")
@@ -104,7 +104,8 @@ def register_user(_user: userrepo.UserCreate, db: Session = Depends(get_db)):
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return new_user
+    response.status_code = 201
+    return
 
 class LoginRequest(BaseModel):
     username: str
