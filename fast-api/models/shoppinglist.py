@@ -8,7 +8,10 @@ class ShoppingList(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     due_date = Column(String, index=True)
+    owner_id = Column(Integer, ForeignKey("users.id"))
+
     items = relationship("ShoppingItem", back_populates="list")
+    owner = relationship("User", back_populates="shopping_lists")
 
 
 class ShoppingItem(Base):

@@ -26,6 +26,7 @@ class ShoppingListCreate(ShoppingListBase):
 
 class ShoppingList(ShoppingListBase):
     id: int
+    owner_id: int
     items: List[ShoppingItem] = []
 
     class Config:
