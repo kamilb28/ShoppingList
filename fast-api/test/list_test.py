@@ -152,24 +152,24 @@ def test_add_item_to_nonexistent_list(test_client):
 
 
 # wydajnościowy ???
-# def test_add_many_items_to_list(test_client):
-#     data = {"sub": "testuser"}
-#     token = create_access_token(data)
-#     assert token is not None
+def test_add_many_items_to_list(test_client):
+    data = {"sub": "testuser"}
+    token = create_access_token(data)
+    assert token is not None
 
-#     response = test_client.post(
-#         "/shopping-lists/",
-#         json={"name": "Groceries", "due_date": "2024-12-31"},
-#         headers={"Authorization": f"Bearer {token}"},  # Upewnij się, że masz token
-#     )
-#     list_id = response.json()["id"]
+    response = test_client.post(
+        "/shopping-lists/",
+        json={"name": "Groceries", "due_date": "2024-12-31"},
+        headers={"Authorization": f"Bearer {token}"},  # Upewnij się, że masz token
+    )
+    list_id = response.json()["id"]
 
-#     for i in range(100):
-#         response = test_client.post(
-#             f"/shopping-lists/{list_id}/items/",
-#             json={"name": f"Item {i}", "quantity": 1, "unit": "pcs"},
-#             headers={"Authorization": f"Bearer {token}"},
-#         )
-#         assert response.status_code == 200
+    for i in range(100):
+        response = test_client.post(
+            f"/shopping-lists/{list_id}/items/",
+            json={"name": f"Item {i}", "quantity": 1, "unit": "pcs"},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert response.status_code == 200
 
 
