@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import engine, Base, get_db
 from models import shoppinglist
@@ -7,6 +8,17 @@ from schemas import shoppinglistrepo
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+# Dodaj CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:4200"],  # Zezwól na połączenia z Angulara
+    allow_credentials=True,
+    allow_methods=["*"],  # Zezwól na wszystkie metody (GET, POST, PUT, DELETE, itp.)
+    allow_headers=["*"],  # Zezwól na wszystkie nagłówki
+)
+
+Base.metadata.create_all(bind=engine)
 
 # Get all shopping lists
 @app.get("/shopping-lists/", response_model=list[shoppinglistrepo.ShoppingList])

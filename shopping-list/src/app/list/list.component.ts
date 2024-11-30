@@ -1,84 +1,65 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
+import { ShoppingService } from '../services/shopping-list.service';
 
 @Component({
   selector: 'app-list',
-  imports: [
-    CommonModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatCardModule,
-  ],
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './list.component.html',
   styleUrls: ['./list.component.css'],
 })
-export class ListComponent {
-  shoppingLists = [
-    {
-      id: 1,
-      name: 'Groceries',
-      dueDate: '2024-12-01',
-      items: [
-        { name: 'Milk', quantity: 1, unit: 'Liter', completed: false },
-        { name: 'Bread', quantity: 2, unit: 'Loaf', completed: true },
-      ],
-    },
-    {
-      id: 2,
-      name: 'Party Supplies',
-      dueDate: '2024-12-10',
-      items: [
-        { name: 'Chips', quantity: 3, unit: 'Pack', completed: false },
-        { name: 'Soda', quantity: 2, unit: 'Bottle', completed: false },
-      ],
-    },
-  ];
+export class ListComponent implements OnInit {
+  shoppingLists: any[] = [];
 
-  toggleCompleted(listId: number, itemName: string): void {
-    const list = this.shoppingLists.find((l) => l.id === listId);
-    if (list) {
-      const item = list.items.find((i) => i.name === itemName);
-      if (item) {
-        item.completed = !item.completed;
-      }
-    }
-  }
-  
-  addNewList(name: string, dueDate: string, event: Event): void {
+  constructor(private shoppingService: ShoppingService) {}
 
-    event.preventDefault(); // Zapobiega przeładowaniu strony
-    const newId = this.shoppingLists.length + 1;
-
-    this.shoppingLists.push({
-      id: newId,
-      name,
-      dueDate,
-      items: [],
+  ngOnInit(): void {
+    this.shoppingService.getShoppingLists().subscribe((data) => {
+      this.shoppingLists = data;
     });
   }
-  
-  deleteList(listId: number): void {
-    this.shoppingLists = this.shoppingLists.filter((list) => list.id !== listId);
+
+  addNewList(name: string, dueDate: string, event: Event): void {
+    event.preventDefault();
+    const newList = { name, due_date: dueDate };
+    this.shoppingService.createShoppingList(newList).subscribe((list) => {
+      this.shoppingLists.push(list);
+    });
   }
 
   addItemToList(listId: number, name: string, quantity: number, unit: string, event: Event): void {
-    event.preventDefault(); // Zapobiega przeładowaniu strony
-  
+    event.preventDefault();
+    const newItem = { name, quantity, unit };
+    this.shoppingService.addItemToList(listId, newItem).subscribe((item) => {
+      const list = this.shoppingLists.find((l) => l.id === listId);
+      if (list) {
+        list.items.push(item);
+      }
+    });
+  }
+
+  toggleCompleted(listId: number, itemId: number): void {
     const list = this.shoppingLists.find((l) => l.id === listId);
-    if (list && name && quantity > 0 && unit) {
-      list.items.push({
-        name,
-        quantity,
-        unit,
-        completed: false,
-      });
+    if (list) {
+      const item = list.items.find((i: any) => i.id === itemId);
+      if (item) {
+        this.shoppingService.toggleItemCompletion(listId, itemId).subscribe(
+          (updatedItem) => {
+            item.completed = updatedItem.completed;
+          },
+          (error) => {
+            console.error('Failed to toggle completion:', error);
+            alert('Could not toggle item completion. Please try again.');
+          }
+        );
+      }
     }
   }
-  
-}
 
+  deleteList(listId: number): void {
+    this.shoppingService.deleteShoppingList(listId).subscribe(() => {
+      this.shoppingLists = this.shoppingLists.filter((list) => list.id !== listId);
+    });
+  }
+}
