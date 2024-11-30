@@ -55,7 +55,7 @@ def create_shopping_list(
     user = db.query(User).filter(User.username == username).first()
     if user is None:
             raise HTTPException(status_code=401, detail="User not found")
-    new_list = ShoppingList(**list_data.dict(), owner_id=user.id)
+    new_list = ShoppingList(**list_data.model_dump(), owner_id=user.id)
     db.add(new_list)
     db.commit()
     db.refresh(new_list)
@@ -67,7 +67,7 @@ def add_item_to_list(list_id: int, item_data: shoppinglistrepo.ShoppingItemCreat
     shopping_list = db.query(ShoppingList).filter(ShoppingList.id == list_id).first()
     if not shopping_list:
         raise HTTPException(status_code=404, detail="Shopping list not found")
-    new_item = ShoppingItem(**item_data.dict(), list_id=list_id)
+    new_item = ShoppingItem(**item_data.model_dump(), list_id=list_id)
     db.add(new_item)
     db.commit()
     db.refresh(new_item)
