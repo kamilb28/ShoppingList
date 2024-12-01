@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/angular';
-import { ListComponent } from './list.component';
-import { ShoppingService } from '../services/shopping-list.service';
+import { ListComponent } from '../../src/app/list/list.component';
+import { ShoppingService } from '../../src/app/services/shopping-list.service';
 import { of, throwError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';

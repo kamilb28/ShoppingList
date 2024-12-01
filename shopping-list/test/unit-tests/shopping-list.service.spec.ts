@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { ShoppingService } from './shopping-list.service';
+import { ShoppingService } from '../../src/app/services/shopping-list.service';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 
 describe('ShoppingService', () => {
