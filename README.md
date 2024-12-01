@@ -11,7 +11,11 @@ uruchomienie fast api: `uvicorn main:app --reload`
 
 testy (wszystkie): `pytest -v`
 
+jednostkowe: `pytest -v test/unit`
+
 integracyjne: `pytest -v test/integration`
+
+systemowe (end-to-end): `pytest -v test/e2e`
 
 ### Angular:
 **komenty nalezy uruchomic z wlasciwego im katalogu**
