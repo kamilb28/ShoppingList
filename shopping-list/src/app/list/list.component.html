@@ -5,12 +5,12 @@
     <!-- Formularz dodawania nowej listy -->
     <form (submit)="addNewList(newListName.value, newDueDate.value, $event)">
       <input #newListName type="text" placeholder="Enter List Name" required />
-      <input #newDueDate type="date" required />
+      <input #newDueDate data-testid="due-date-input" type="date" required />
       <button type="submit">Add List</button>
     </form>
   
     <!-- Wyświetlanie list zakupów -->
-    <div *ngFor="let list of shoppingLists" class="shopping-list">
+    <div data-testid="shoppingLists" *ngFor="let list of shoppingLists" class="shopping-list">
       <h3>{{ list.name }} (Due: {{ list.due_date }})</h3>
       <ul>
         <!-- Wyświetlanie elementów w liście -->
