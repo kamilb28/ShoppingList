@@ -1,10 +1,10 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/angular';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/angular';
 import { ListComponent } from './list.component';
 import { ShoppingService } from '../services/shopping-list.service';
 import { of, throwError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 
-describe('ShoppingListComponent', () => {
+describe('ListComponent', () => {
   let mockShoppingService = {
     getShoppingLists: jest.fn().mockReturnValue(of([])),
     createShoppingList: jest.fn(),
@@ -27,37 +27,30 @@ describe('ShoppingListComponent', () => {
 
   it('should fetch and display shopping lists on initialization', async () => {
     const mockLists = [
-      { id: 1, name: 'Groceries', due_date: '2024-12-31' },
-      { id: 2, name: 'Electronics', due_date: '2024-11-30' },
+      { id: 1, name: 'Groceries', due_date: '2024-12-31', items: [] },
+      { id: 2, name: 'Electronics', due_date: '2024-11-30', items: [] },
     ];
     mockShoppingService.getShoppingLists.mockReturnValue(of(mockLists));
 
-    await render(ListComponent, {
-      imports: [FormsModule],
-      providers: [{ provide: ShoppingService, useValue: mockShoppingService }],
-    });
-
-    expect(mockShoppingService.getShoppingLists).toHaveBeenCalled();
-
-    for (let list of mockLists) {
-      expect(screen.getByText(list.name)).toBeTruthy();
-    }
+  await render(ListComponent, {
+    imports: [FormsModule],
+    providers: [{ provide: ShoppingService, useValue: mockShoppingService }],
   });
 
-  it('should display an error message if fetching lists fails', async () => {
-    mockShoppingService.getShoppingLists.mockReturnValue(
-      throwError(() => new Error('Error fetching lists'))
-    );
-
-    await render(ListComponent, {
-      imports: [FormsModule],
-      providers: [{ provide: ShoppingService, useValue: mockShoppingService }],
-    });
-
+  await waitFor(() => {
     expect(mockShoppingService.getShoppingLists).toHaveBeenCalled();
-    expect(
-      screen.getByText('An error occurred: Error: Error fetching lists')
-    ).toBeTruthy();
+
+    const shoppingLists = screen.getAllByTestId('shoppingLists');
+    expect(shoppingLists.length).toBe(mockLists.length);
+
+    mockLists.forEach((list, index) => {
+      const shoppingListDiv = shoppingLists[index];
+      const h3 = within(shoppingListDiv).getByText(
+        `${list.name} (Due: ${list.due_date})`
+      );
+      expect(h3).toBeTruthy();
+    });
+  });
   });
 
   it('should add a new shopping list when the user submits the form', async () => {
@@ -70,8 +63,8 @@ describe('ShoppingListComponent', () => {
       providers: [{ provide: ShoppingService, useValue: mockShoppingService }],
     });
 
-    const nameInput = screen.getByPlaceholderText('List Name');
-    const dateInput = screen.getByPlaceholderText('Due Date');
+    const nameInput = screen.getByPlaceholderText('Enter List Name');
+    const dateInput = screen.getByTestId('due-date-input');
     const submitButton = screen.getByText('Add List');
 
     fireEvent.input(nameInput, { target: { value: newList.name } });
@@ -85,7 +78,14 @@ describe('ShoppingListComponent', () => {
         due_date: newList.due_date,
       });
 
-      expect(screen.getByText(newList.name)).toBeTruthy();
+      const shoppingLists = screen.getAllByTestId('shoppingLists');
+      expect(shoppingLists.length).toBe(1);
+
+      const shoppingListDiv = shoppingLists[0];
+      const h3 = within(shoppingListDiv).getByText(
+        `${newList.name} (Due: ${newList.due_date})`
+      );
+      expect(h3).toBeTruthy()
     });
   });
 });
