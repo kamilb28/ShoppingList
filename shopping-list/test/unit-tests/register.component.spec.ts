@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/angular';
-import { RegisterComponent } from './register.component';
-import { AuthService } from '../../services/auth.service';
+import { RegisterComponent } from '../../src/app/auth/register/register.component';
+import { AuthService } from '../../src/app/services/auth.service';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
