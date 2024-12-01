@@ -3,6 +3,9 @@ import { LoginComponent } from './login.component';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { RouterTestingModule } from '@angular/router/testing';
+
+class DummyComponent {}
 
 describe('LoginComponent', () => {
   let mockAuthService: Partial<AuthService>;
@@ -17,26 +20,24 @@ describe('LoginComponent', () => {
     };
   });
 
-  it('should create the component', async () => {
-    const { fixture } = await render(LoginComponent, {
+  const renderLoginComponent = async () => {
+    return await render(LoginComponent, {
       providers: [
         { provide: AuthService, useValue: mockAuthService },
         { provide: Router, useValue: mockRouter },
       ],
     });
+  };
 
+  it('should create the component', async () => {
+    const { fixture } = await renderLoginComponent();
     expect(fixture.componentInstance).toBeTruthy();
   });
 
   it('should call AuthService login method on form submit', async () => {
     const loginSpy = jest.spyOn(mockAuthService, 'login').mockReturnValue(of({ access_token: 'test-token' }));
 
-    await render(LoginComponent, {
-      providers: [
-        { provide: AuthService, useValue: mockAuthService },
-        { provide: Router, useValue: mockRouter },
-      ],
-    });
+    await renderLoginComponent();
 
     const emailInput = screen.getByPlaceholderText('Email');
     const passwordInput = screen.getByPlaceholderText('Password');
@@ -52,16 +53,11 @@ describe('LoginComponent', () => {
   });
 
   it('should store access token and navigate to list on successful login', async () => {
-    jest.spyOn(mockAuthService, 'login').mockReturnValue(of({ access_token: 'test-token' }));
+    jest.spyOn(mockAuthService, 'login').mockReturnValue(of({ 'access_token': 'test-token' }));
     const navigateSpy = jest.spyOn(mockRouter, 'navigate');
-    const localStorageSpy = jest.spyOn(localStorage, 'setItem');
+    const localStorageMock = jest.spyOn(Storage.prototype, 'setItem');
 
-    await render(LoginComponent, {
-      providers: [
-        { provide: AuthService, useValue: mockAuthService },
-        { provide: Router, useValue: mockRouter },
-      ],
-    });
+    await renderLoginComponent();
 
     const emailInput = screen.getByPlaceholderText('Email');
     const passwordInput = screen.getByPlaceholderText('Password');
@@ -72,7 +68,7 @@ describe('LoginComponent', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(localStorageSpy).toHaveBeenCalledWith('access_token', 'test-token');
+      expect(localStorageMock).toHaveBeenCalledWith('access_token', 'test-token');
       expect(navigateSpy).toHaveBeenCalledWith(['/list']);
     });
   });
@@ -81,12 +77,7 @@ describe('LoginComponent', () => {
     jest.spyOn(mockAuthService, 'login').mockReturnValue(throwError(() => new Error('Invalid username or password')));
     const alertSpy = jest.spyOn(window, 'alert').mockImplementation(() => {});
 
-    await render(LoginComponent, {
-      providers: [
-        { provide: AuthService, useValue: mockAuthService },
-        { provide: Router, useValue: mockRouter },
-      ],
-    });
+    await renderLoginComponent();
 
     const emailInput = screen.getByPlaceholderText('Email');
     const passwordInput = screen.getByPlaceholderText('Password');
@@ -104,12 +95,7 @@ describe('LoginComponent', () => {
   it('should navigate to register page when Register button is clicked', async () => {
     const navigateSpy = jest.spyOn(mockRouter, 'navigate');
 
-    await render(LoginComponent, {
-      providers: [
-        { provide: AuthService, useValue: mockAuthService },
-        { provide: Router, useValue: mockRouter },
-      ],
-    });
+    await renderLoginComponent();
 
     const registerButton = screen.getByRole('button', { name: 'Register' });
     fireEvent.click(registerButton);
@@ -119,4 +105,5 @@ describe('LoginComponent', () => {
     });
   });
 });
+
 
