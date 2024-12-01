@@ -23,3 +23,9 @@ systemowe (end-to-end): `pytest -v test/e2e`
 instalacja zależności: `npm install`
 
 uruchomienie frontu: `ng serve`
+
+---
+
+testy (wszystkie): `npm test`
+
+jednostkowe: `npm test -- test/unit-tests`
