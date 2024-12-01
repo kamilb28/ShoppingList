@@ -3,17 +3,24 @@ import { ListComponent } from './list.component';
 import { ShoppingService } from '../services/shopping-list.service';
 import { of, throwError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 
 describe('ListComponent', () => {
   let mockShoppingService = {
     getShoppingLists: jest.fn().mockReturnValue(of([])),
     createShoppingList: jest.fn(),
+    addItemToList: jest.fn(),
+    toggleItemCompletion: jest.fn(),
+    deleteShoppingList: jest.fn(),
   };
 
   beforeEach(() => {
     mockShoppingService = {
       getShoppingLists: jest.fn().mockReturnValue(of([])),
       createShoppingList: jest.fn(),
+      addItemToList: jest.fn(),
+      toggleItemCompletion: jest.fn(),
+      deleteShoppingList: jest.fn(),
     };
   });
 
@@ -86,6 +93,144 @@ describe('ListComponent', () => {
         `${newList.name} (Due: ${newList.due_date})`
       );
       expect(h3).toBeTruthy()
+    });
+  });
+
+  it('should add a new item to a shopping list when the user submits the form', async () => {
+    const mockList = { id: 1, name: 'Groceries', due_date: '2024-12-31', items: [] };
+    const newItem = { id: 101, name: 'Milk', quantity: 2, unit: 'liters', completed: false };
+  
+    mockShoppingService.getShoppingLists.mockReturnValue(of([mockList]));
+    mockShoppingService.addItemToList = jest.fn().mockReturnValue(of(newItem));
+  
+    await render(ListComponent, {
+      imports: [FormsModule],
+      providers: [{ provide: ShoppingService, useValue: mockShoppingService }],
+    });
+  
+    const shoppingList = screen.getAllByTestId('shoppingLists')[0];
+  
+    const nameInput = within(shoppingList).getByPlaceholderText('Item Name');
+    const quantityInput = within(shoppingList).getByPlaceholderText('Quantity');
+    const unitInput = within(shoppingList).getByPlaceholderText('Unit (e.g. kg, szt)');
+    const submitButton = within(shoppingList).getByText('Add Item');
+  
+    fireEvent.input(nameInput, { target: { value: newItem.name } });
+    fireEvent.input(quantityInput, { target: { value: newItem.quantity.toString() } });
+    fireEvent.input(unitInput, { target: { value: newItem.unit } });
+  
+    fireEvent.click(submitButton);
+  
+    await waitFor(() => {
+      expect(mockShoppingService.addItemToList).toHaveBeenCalledWith(mockList.id, {
+        name: newItem.name,
+        quantity: newItem.quantity,
+        unit: newItem.unit,
+      });
+  
+      const items = within(shoppingList).getAllByText(newItem.name + " - " + newItem.quantity + " " + newItem.unit);
+      expect(items.length).toBe(1);
+    });
+  });
+  
+  it('should toggle the completed status of an item', async () => {
+    const mockList = {
+      id: 1,
+      name: 'Groceries',
+      due_date: '2024-12-31',
+      items: [{ id: 101, name: 'Milk', quantity: 2, unit: 'liters', completed: false }],
+    };
+    const updatedItem = { ...mockList.items[0], completed: true };
+  
+    mockShoppingService.getShoppingLists.mockReturnValue(of([mockList]));
+    mockShoppingService.toggleItemCompletion = jest.fn().mockReturnValue(of(updatedItem));
+  
+    await render(ListComponent, {
+      imports: [FormsModule],
+      providers: [{ provide: ShoppingService, useValue: mockShoppingService }],
+    });
+  
+    const shoppingList = screen.getAllByTestId('shoppingLists')[0];
+    const toggleButton = within(shoppingList).getByText('Complete');
+  
+    fireEvent.click(toggleButton);
+  
+    await waitFor(() => {
+      expect(mockShoppingService.toggleItemCompletion).toHaveBeenCalledWith(mockList.id, updatedItem.id);
+  
+      const updatedButton = within(shoppingList).getByText('Undo');
+      expect(updatedButton).toBeTruthy();
+    });
+  });
+
+  it('should delete a shopping list when the delete button is clicked', async () => {
+    const mockLists = [
+      { id: 1, name: 'Groceries', due_date: '2024-12-31', items: [] },
+      { id: 2, name: 'Electronics', due_date: '2024-11-30', items: [] },
+    ];
+  
+    mockShoppingService.getShoppingLists.mockReturnValue(of(mockLists));
+    mockShoppingService.deleteShoppingList = jest.fn().mockReturnValue(of(null));
+  
+    await render(ListComponent, {
+      imports: [FormsModule],
+      providers: [{ provide: ShoppingService, useValue: mockShoppingService }],
+    });
+  
+    const shoppingList = screen.getAllByTestId('shoppingLists')[0];
+    const deleteButton = within(shoppingList).getByText('Delete List');
+  
+    fireEvent.click(deleteButton);
+  
+    await waitFor(() => {
+      expect(mockShoppingService.deleteShoppingList).toHaveBeenCalledWith(mockLists[0].id);
+  
+      const remainingLists = screen.getAllByTestId('shoppingLists');
+      expect(remainingLists.length).toBe(1);
+    });
+  });
+  
+  it('should log out the user and navigate to the login page', async () => {
+    const mockRouter = {
+      navigate: jest.fn(),
+    };
+  
+    await render(ListComponent, {
+      imports: [FormsModule],
+      providers: [
+        { provide: ShoppingService, useValue: mockShoppingService },
+        { provide: Router, useValue: mockRouter },
+      ],
+    });
+  
+    const logoutButton = screen.getByText('Logout');
+    fireEvent.click(logoutButton);
+  
+    await waitFor(() => {
+      expect(localStorage.getItem('access_token')).toBeNull();
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/auth/login']);
+    });
+  });
+
+  it('should redirect to login on unauthorized error during initialization', async () => {
+    const mockRouter = {
+      navigate: jest.fn(),
+    };
+  
+    mockShoppingService.getShoppingLists.mockReturnValue(
+      throwError(() => ({ status: 401 }))
+    );
+  
+    await render(ListComponent, {
+      imports: [FormsModule],
+      providers: [
+        { provide: ShoppingService, useValue: mockShoppingService },
+        { provide: Router, useValue: mockRouter },
+      ],
+    });
+  
+    await waitFor(() => {
+      expect(mockRouter.navigate).toHaveBeenCalledWith(['/auth/login']);
     });
   });
 });
