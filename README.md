@@ -29,3 +29,5 @@ uruchomienie frontu: `ng serve`
 testy (wszystkie): `npm test`
 
 jednostkowe: `npm test -- test/unit-tests`
+
+integracyjne: `npm test -- test/integration-tests`
