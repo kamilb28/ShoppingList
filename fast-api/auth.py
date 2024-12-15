@@ -5,6 +5,7 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi import Depends, HTTPException
 import os
 import secrets
+from datetime import timezone
 
 def load_or_generate_secret_key():
     if os.path.exists("jwt.key"):
@@ -33,7 +34,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # Funkcja do tworzenia tokenu JWT
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
